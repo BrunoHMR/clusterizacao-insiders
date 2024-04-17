@@ -1,0 +1,330 @@
+Problema do negócio: a empresa All In One Place é uma empresa Outlet Multimarcas. Ou seja, comercializa produtos de segunda linha de diversas marcas a um preço menor, através de um e-commerce. Em pouco mais de um ano de venda, o time de marketing percebeu que uma parcela de clientes compram produtos mais caros, com maior frequência e acabam contribuindo com uma parcela significativa no faturamento da empresa. Baseado nessa percepção, a empresa pretende criar um programa de fidelização de clientes (Heavy Users), chamado Insiders. Então, o objetivo deste projeto é determinar, através dos dados dos clientes, quais destes clientes são elegíveis ao programa.
+
+Perguntas do negócio:
+1. Quais são as pessoas elegíveis para participar do programa de fidelização?
+2. Quantos clientes farão parte do grupo?
+3. Quais as principais características destes clientes?
+4. Qual a porcentagem de contribuição do faturamento total vem dos Insiders?
+5. Qual a expectativa de faturamento destes clientes para os próximos meses?
+6. Quais as condições para uma pessoa ser elegível ao Insiders?
+7. Quais as condições para uma pessoa ser removida do Insiders?
+8. Qual a garantia de que o programa Insiders é melhor do que o restante da base?
+9. Quais ações o time de marketing pode executar para aumentar o faturamento?
+
+Outlet: venda de produtos no varejo por preços mais atrativos. Normalmente utilizado em casos onde o estoque da loja não foi totalmente vendido e a empresa precisa se livrar dos produtos restantes.
+
+Grupo Look a Like: grupo de pessoas parecidas.
+
+Aprendizado semi-supervisionado: exploration (amostragem aleatória) e exploitation (com o conhecimento gerado pela amostragem aleatória).
+
+Chargeback: quando alguém faz uma compra com o seu cartão e você liga para a operadora e avisa que não foi você que comprou. O estabelecimento é obrigado pela operadora do cartão a devolver o dinheiro da compra ao cliente. No caso de empresas como o Uber, o Chargeback duplica o custo da empresa, pois além de ela ter que devolver o dinheiro do cliente ela ainda precisa pagar o custo do taxista.
+
+Os insiders dependem muito da fase que a empresa está: se estiver numa fase de scale up, onde a empresa não se importa tanto com o custo dos clientes, não é necessária uma feature que considere o custo de cada cliente. Já se estiver cortando gastos, é interessante considerar o custo de aquisição de cada cliente.
+
+Este grupo de pessoas elegíveis deve ser formado por clientes mais antigos, pois como você consegue saber se um cliente é fiel se ele já não estiver a um certo tempo comprando com você?
+
+------------------------------------------------------------------------------------------------------------------------------------------
+Descrição dos dados:
+- InvoiceNo: id da transação.
+- StockCode: código do item.
+- Description: descrição do item.
+- Quantity: quantidade do item por transação.
+- InvoiceDate: data da transação
+- UnitPrice: preço unitário do item.
+- CustomerID: id do cliente.
+- Country: país do cliente.
+
+Passo a passo do projeto:
+1. Problema do negócio e planejamento da solução.
+2. Análise estatística descritiva e métricas de clusterização.
+3. EDA com LUX e relatório de insights.
+4. Preparação dos dados.
+5. Modelagem de Machine Learning.
+6. Métricas e resultados do negócio.
+7. Deploy do modelo em produção.
+
+Planejamento da solução das perguntas do negócio:
+1. Quais são as pessoas elegíveis para participar do programa de fidelização?
+- Do ponto de vista do faturamento: pessoas com alto ticket médio, alto LTV, baixa recência, alto basket size, baixa chance de churn.
+- Do ponto de vista dos custos: baixa taxa de devolução.
+- Experiência de compra: média alta das avaliações.
+5. Qual a expectativa de faturamento destes clientes para os próximos meses?
+- Calcular o LTV do grupo Insiders (pode utilizar o método estatístico ARIMA).
+- Análise de Cohort (marcações das pessoas no tempo).
+6. e 7. Quais as condições para uma pessoa ser elegível/removida ao Insiders?
+- A pessoa deve ter um perfil similar/diferente ao grupo Insiders.
+- Definir a periodicidade (1 mês, 3 meses ou etc).
+8. Qual a garantia de que o programa Insiders é melhor do que o restante da base?
+- Teste A/B e teste A/B Bayesiano.
+- Teste de hipóteses: a hipótese nula de que os grupos não são diferentes deve ser rejeitada.
+9. Quais ações o time de marketing pode executar para aumentar o faturamento?
+- Desconto, preferência de compra, visita à empresa, etc.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+RFM Model:
+- Recência: tempo desde a última compra. Responsividade.
+- Frequência: quantas compras no período de tempo.
+- Monetary: faturamento e gastos. Alto valor de compra.
+1. Criar 3 colunas com as 3 métrica anteriores para cada cliente.
+2. Ordena os clientes pela recência e classifica eles com um score de 1 a 5.
+3. Fazer o mesmo na sequência para a frequência e monetariedade.
+4. Faz a média entre os 3 scores para cada cliente e os ordenada de acordo com esta média.
+5. Segmentação: coloca a recência como eixo X, a frequência como eixo Y e a monetariedade como legenda.
+6. Programa de fidelização: potential loyalties.
+
+Métricas de clusterização:
+- WSS (Within-Cluster Sum of Square): métrica de clusterização (método do cotovelo). Escolher o ponto da curva em que a diferença entre as inclinações é maior (ou seja, onde tem a maior "dobra"). Mede o quanto os clusters estão agrupados (coesão).
+- SS (Silhouette Score): mede a distância entre os clusters (separação). Se der um valor negativo, significa que um mesmo cluster tem pontos tão distantes entre si que chegam a englobar o outro cluster (a distância 'a' entre os pontos do mesmo cluster é maior que a distância 'b' entre um cluster e outro), o que é algo ruim para o modelo. O ideal é que o valor da SS tenda a 1. A SS, em geral, é melhor que a WSS, justamente por considerar esta distância entre os clusters. Gráfico faca: quanto mais condensado (pontos próximos a 1), melhor o cluster.
+- Pesquisar a biblioteca 'yellowbrick' para melhorar a performance das métricas de clusterização.
+- Foi escolhido um k = 3, pois embora a melhor SS seja com k = 2, o melhor WSS é com k = 3 e a diferença na SS entre k = 3 e k = 2 é praticamente insignificante.
+
+Machine Learning Manifold:
+- Baseado em topologia: gráficos em alta dimensionalidade.
+- PCA: método de aprendizado baseado em matrizes ou espaço de distâncias. Deve respeitar 9 condições (colorários) para ter uma garantia de espaço de data que funcione (Espaço de Hilbert - distância euclidiana bem definida).
+- UMAP: Quanto menor os neighbors, mais estruturas próximas são localizadas (como se fosse dar um zoom em alguma parte do plot). Mais rápido que o t-SNE para grandes volumes de dados, mas apresenta uma dificuldade maior na visualização. Serve para ver se os clusters estão misturados ou não em alta dimensionalidade. Mostra, em 2d, se em alta dimensionalidade os pontos dos clusters possuem maior probabilidade de estarem bem separados.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+Feature Engineering:
+- Filtragem de variáveis: eliminar as devoluções (quantidades negativas do dataset) para considerar somente as compras no modelo de clusterização.
+- Total de devoluções: 27 (análise feita na aula 30).
+
+Criação de features:
+- Receita bruta: quantidade de produtos comprados vezes o preço unitário para cada cliente.
+- Recência: quantos dias desde a última compra para cada cliente.
+- Quantidade de compras (invoices): quantas transações foram feitas por cliente.
+- Quantidade de itens: quantos itens comprados no total para cada cliente.
+- Quantidade de produtos: quantos produtos distintos comprados para cada cliente.
+- Ticket médio: média da receita bruta de cada cliente.
+- Recência média: a distância média em dias entre todas as compras de cada cliente.
+- Frequência: data da primeira compra menos data da última compra dividido pela quantidade de compras de cada cliente.
+- Devoluções: quantidade de itens devolvidos por cliente.
+- Tamanho da cesta: quantidade total de itens por pedido para cada cliente.  
+
+------------------------------------------------------------------------------------------------------------------------------------------
+EDA:
+- Correlação entre variáveis: em problemas de clusterização, não tem problema que as variáveis sejam altamente correlacionadas, pois o algoritmo não define um rótulo.
+- Biblioteca de análise automática: profile report.
+- Desvio padrão alto: na média, os pontos estão mais distantes do centro.
+- Coeficiente de variação: quanto mais alto, indica que o desvio padrão é maior em proporção a média. Valores muito altos podem indicar outliers.
+- Análise univariada: remoção de outliers e outras sujeiras dos dados.
+- Análise bivariada: olhar a variabilidade das features 2 a 2 (pairplot) para entender quais features não formam clusters. Quanto mais espalhados estiverem os pontos ao longo dos eixos, mais aquela feature é boa para formar clusters. Exemplo: frequência e ticket médio possuem variação baixa, sendo prováveis candidatas ruins.
+- Correlação de Spearman: quando considera a não linearidade entre as variáveis, diferente de Pearson.
+
+Espaço de dados:
+- PCA: encontra quais eixos (features) possuem maiores variações. Os eixos com maiores variações são melhores para criar clusters.
+- Embedding com árvores de decisão: a grosso modo, um Embedding é um espaço de dados mais organizado. Ele é feito com modelos de árvores de decisão, o qual traz as folhas do modelo. Ou seja, um shape que tem como quantidade de linhas os clientes (cada linha é um cliente) e como colunas os estimators (por padrão são 100 estimators ou árvores). Cada par de linha-coluna indica em qual posição o cliente daquela linha caiu naquela árvore. Se as posições são próximas ao longo das árvores, significa que muito provavelmente aquele cliente está bem clusterizado.
+- Tree-Based-Embedding: transforma a gross_revenue em variável resposta (escolhe como variável resposta a features que você considera mais importante para o negócio) e dropa o customer_id. Usa o método .apply() para aplicar a os dados treinados na estrutura da árvore. Podem ser feitos embedding com mais de duas variáveis também. Caso ao invés do gross_revenue fosse uma variável binária, poderia usar a Random Forest Classifier ao invés da Regressor.
+- UMAP: redutor de dimensionalidade de estimadores (de 100D para 2D, por exemplo).
+- Pode aplicar o embedding em modelos de regressão e clusterização. Fazer o embedding após a preparação dos dados para organizar melhor o espaço de dados e as features e depois treinar o modelo em cima do embedding, onde o novo X será o df_leaf e o y a variável resposta.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+Modelagem:
+- Fazer uma nova limpeza na base após a preparação do espaço de dados antes de treinar os modelos.
+- PAM clustering: utiliza as distâncias entre o medóide ao invés do centróide. O medóide leva em consideração a mediana ao invés da média.
+
+K-Means:
+1. Escolher um valor de K clusters aleatoriamente.
+2. O algoritmo inicializa um centróide aleatório para cada cluster.
+3. Calcula a distância do centróide dos clusters em relação a todos os pontos.
+4. Reposiciona os centróides e repete o passo 3.
+- Melhor para clusters circulares.
+- Os dados precisam estar em escalas comparáveis, devido à medida da distância euclidiana entre os pontos.
+- Sempre irá convergir para o número de clusters escolhido.
+- Sensível à outliers.
+
+Gaussian Mixture Model (GMM):
+- Baseado em curvas gaussianas. As curvas gaussianas, vistas de topo, são formadas por círculos, um dentro do outro. O círculo do centro de uma curva gaussiana é a média e os círculos ao redor do centro são os desvios padrões.
+1. Define um número de curvas gaussianas aleatoriamente.
+2. O algoritmo inicializa as curvas gaussianas no espaço de dados aleatoriamente.
+3. É calculada a probabilidade cada ponto em pertencer a cada curva gaussiana.
+- Utiliza o Teorema de Bayes para calcular as probabilidades:
+P(A|B) = P(B|A) * P(A) / P(B), onde:
+- P(A|B): probabilidade de ocorrer A, dado que já ocorreu B.
+- P(B|A): probabilidade de ocorrer B, dado que já ocorreu A.
+- P(A): probabilidade de ocorrer A.
+- P(B): probabilidade de ocorrer B.
+- Porém, não sabemos a probabilidade de ocorrer B. Deste modo, podemos reescrever o teorema sabendo a probabilidade de NÃO ocorrer A:
+P(A|B) = P(B|A) * P(A) / [P(B|A) * P(A) + P(B|nA) * P(nA)]
+- Para encontrar P(A|B) e substituir os valores na fórmula, utiliza a função de Densidade de Probabilidade. Caso queira me aprofundar neste algoritmo, pesquisar mais afundo posteriormente sobre esta função.
+- Vantagens: robusto a outliers, não depende de métricas de distância, permite a inclusão de incertezas para a formação dos clusters e é flexível em relação aos formatos dos clusters.
+- Desvantagens: depende de algoritmos de otimização. Exemplo: EM (Expectation Maximization).
+
+H-Clustering (clusterização hierárquica):
+1. Encontra a distância de um ponto para todos os pontos.
+2. Identifica o vizinho mais próximo daquele ponto.
+3. Cria um novo cluster de 2 pontos, composto pelo ponto da etapa 1 e o vizinho mais próximo da etapa 2.
+4. Repete os passos 1, 2 e 3 para um novo ponto.
+5. Quando chegar o momento em que for necessário encontrar a distância entre pontos de dois clusters que foram formados através dos passos 1, 2 e 3, utiliza-se o critério de Linkage.
+- Single-Linkage: distância entre os pontos mais próximos de cada cluster.
+- Complete-Linkage: distância entre os pontos mais afastados de cada cluster.
+- Average-Linkage: distância entre o ponto médio formado pelos pontos de cada cluster.
+- Group-Linkage: distância média entre todos os pontos de cada cluster.
+- Wards-Method: distância quadrática média entre todos os pontos de cada cluster.
+6. Haverá um momento em que os novos clusters ficaram sobrepostos em relação aos clusters já formados anteriormente, em visualização 2D, sendo necessário visualizá-los de forma hierárquica.
+7. Monta uma matriz entre os pontos, onde os valores da matriz são as distâncias entre os pontos.
+8. Pelas distâncias entre os pontos, formam-se os clusters de acordo com as menores distâncias.
+9. Repete o passo 7 agora com os clusters formados ao invés dos pontos.
+10. Cria um gráfico com os eixos dos pontos (x) e das distâncias (y) e faz as conexões entre os pontos e os clusters (Dendrograma).
+- Consegue visualmente ver os nomes que pertencem aos clusters pelo Dendograma.
+- Não tem como um ponto atribuído a um cluster mudar de cluster nas iterações seguintes.
+- Escolhe a quantidade de K clusters pelo número de cortes verticais do Dendrograma. O valor do eixo Y que tiver a menor distância para o valor de referência é o ponto de corte. Ou também pode avaliar pela Silhouette Score.
+
+DBScan:
+1. Define um raio epsolon (eps) no espaço de dados e observa quantos pontos são englobados pela circunferência de epsolon.
+2. Define quantos pontos N devem ter no mínimo (min_samples) dentro da circunferência/vizinhança.
+3. O ponto central definido para inicializar o raio é chamado de Core Point. Os pontos vizinhos desse Core Point são chamados de Border Points e os pontos não vizinhos são chamados de Noise Points (possíveis outliers). 
+4. Os border points são atribúidos a um core point e juntos a ele formam um cluster. Os noise points são deixados de fora como se fossem um outro cluster outlier (para um outlier é atribuído label = -1).
+- Vantagens: segrega bem os outliers, encontra clusters de diferentes formatos e separa bem clusters de diferentes densidades.
+- Desvantagens: dificuldade em segregar clusters de densidades parecidas. Ou seja, funciona melhor com um conjunto de dados que possui clusters naturais. Dificuldade em encontrar os hiperparâmetros.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+Preparação dos dados:
+- Reescaling: quando a variável não possui uma distribuição normal.
+- Padronização: quando a variável possui uma distribuição próxima à normal.
+- Teste de normalidade: QQ plot (quantile-quantile plot).
+- Teste de hipótese: KS test. Se p_value > 0.05 a distribuição é normal.
+- Distância Euclidiana: menor distância entre 2 pontos.
+- Distância de Mahallanobis ou de Manhattan: distâncias paralelas aos eixos.
+- Detecção de outliers: boxplot.
+
+Regra do coração para reescala:
+- Distribuição normal e não possui outlier: Standard Scaler.
+- Distribuição normal com outliers: Robust Scaler.
+- Distribuição não normal: Min Max Scaler.
+
+Seleção das features:
+- Como no final, para definir o perfil do cluster, deverão ser calculadas as médias, não faz sentido utilizar as features que possuem cálculos de média, como por exemplo: ticket médio, recência média e tamanho da cesta.
+- As variáveis qtd_invoices e qtd_items são semelhantes à variável qtd_produtos. Portanto, podem ser eliminados, visto que na hora de traçar o perfil dos clientes não é necessário colocar 3 features quase iguais na descrição deles.
+- Se na seleção das features o avg_recency_days for determinante, elimina-se 25% da base, pois correspondem as linhas que não possuiam customer_id originalmente, não tendo como calcular a recência para estas linhas.
+
+Performance dos modelos:
+- Quando a faca da Silhouetta é negativa significa que para aqueles pontos o cluster está errado.
+- O cluster é sempre representado pelo ponto médio. Exemplo: o meu grupo de clientes fiéis tem um consumo médio x, uma frequência média y e assim por diante.
+- Pega o modelo RFM e ordena os clientes por Recência. Depois, da notas de 1 a 5 e constrói 5 grupos (20% da base para cada nota). Depois, faz o mesmo para o Monetary e para a Frequência.
+- Clusterizar (rodar os modelos) sobre o espaço de embedding.
+- Escolher uma quantidade de clusters que faça sentido para o negócio, mesmo que a Silhouette não esteja tão alta.
+- Refazer a análise dos clusters.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+Mindmap de hipóteses:
+
+Clusterização de clientes:
+1. Clientes: nome, profissão, estado civil, profissão, gênero, idade, salário, escolaridade, volume de compras, localidade.
+2. Marketing: ponto físico, online (anúncio facebook, anúncio google, tv, e-mail), promoção.
+3. Site: forma de pagamento, acesso login, usabilidade, vitrine, recomendação, segurança. 
+4. Produto: custo, preço, estoque, categoria, marca, nome, descrição, pacote/unidade, peso, tamanho, validade.
+5. Compra: primeira compra, última compra, frequencia de compra, volume de compra, basket size, número de itens.
+6. Tempo: dia, ano, mês, semana, feriado, sazonalidade.
+7. Logística: modal, prazo de entrega, raio de entrega, preço do frete, localidade de entrega.
+
+Hipóteses:
+- Cluster, variável para testar, base de comparação. Site para desenhar o mindmap: coggle.it.
+1. Compra:
+- Os clientes do cluster insiders usam cartão de crédito como meio de pagamento em 80% das compras. Não é possível fazer.
+- Os clientes do cluster insiders possuem um ticket médio de 10% acima do segundo cluster com mais receita bruta.
+- Os clientes do cluster insiders possuem um basket size acima de 5 produtos.
+- Os clientes do cluster insiders possuem um volume de compra acima de 15% do total de compras.
+- Os clientes do cluster insiders possuem um número de devoluções abaixo da média do restante da base.
+2. Cliente:
+- Os clientes do cluster insiders possuem um estado civil de solteiro, em média, pelo menos 60% das vezes.
+- Os clientes do cluster insiders estão na faixa de 24-35 anos em pelo menos 10% das vezes.
+- Os clientes do cluster insiders estão com uma localidade de entrega dentro de um raio de 50 km.
+- Os clientes do cluster insiders recebem mais de 100 mil dólares anualmente em pelo menos 5% das vezes.
+- Os clientes do cluster insiders possuem ensino superior em pelo menos 85% das vezes.
+3. Produto:
+- 30% de todos os produtos em pacotes grandes são comprados por clientes do cluster insiders.
+- A mediana dos preços dos produtos comprados por clientes do cluster insiders e maior que 10% da mediana de todos os produtos.
+- O percentil do preço dos produtos comprados pelos clientes do cluster insiders.
+- O peso médio dos produtos dos clientes do cluster insiders é maior que o peso médio dos produtos comprados pelo restante dos clientes.
+- A idade média dos produtos comprados pelo cluster insiders é menor do que 15 dias.
+
+Criação dos clusters:
+- Precisa fixar o modelo salvando-o em arquivo pickle. Caso contrário, cada execução do notebook gerará clusters diferentes.
+- Cluster insiders: aquele que estiver ordenado com a maior gross_revenue.
+- Descrever as características dos clusters: perc_customer, recency_days, gross_revenue, frequency, qtde_products/returns.
+- Entender e pensar em dicas do que oferecer aos outros clusters. Exemplo: um deles tem a menor qtde_products, então pode sugerir alguma técnica que a equipe de negócio possa fazer para vender mais produtos, tipo um cross-sell.
+
+Validação das hipóteses: aula 044.
+
+Teste estatístico t-student: gera os intervalos de confiança dos valores. Exemplo: o gross_revenue do cluster é de 8000, mas pelo teste pode variar entre 6000 e 10000.
+
+Respostas das perguntas de negócio:
+1. Quais são as pessoas elegíveis para participar do programa de fidelização?
+2. Quantos clientes farão parte do grupo?
+3. Quais as principais características destes clientes?
+4. Qual a porcentagem de contribuição do faturamento total vem dos Insiders?
+5. Qual a expectativa de faturamento destes clientes para os próximos meses?
+6. Quais as condições para uma pessoa ser elegível ao Insiders?
+- Aqueles que estiverem dentro dos intervalos de confiança via teste estatístico t-student.
+7. Quais as condições para uma pessoa ser removida do Insiders?
+- Estar abaixo dos intervalos de confiança, de acordo com o parâmetro alpha do t-student. Exemplo: alpha = 0.95 indica que 5% dos clientes podem ser removíveis.
+8. Qual a garantia de que o programa Insiders é melhor do que o restante da base?
+9. Quais ações o time de marketing pode executar para aumentar o faturamento?
+
+------------------------------------------------------------------------------------------------------------------------------------------
+Deploy
+
+Não é necessário guardar um arquivo pickle em problemas de clusterização, pois não é necessária toda uma estrutura de modelo, mas sim, apenas o valor de k. Não otimização de parâmetros.
+
+Para criar a tabela no SQLite, o nome das colunas deve estar na mesma ordem que aparece no dataframe do Python.
+
+É preciso salvar o resultado do notebook jupyter em um banco de dados para carregá-lo em uma ferramenta de visualização, pois no notebook jupyter ele está salvo em memória RAM e a ferramenta de dataviz (exemplo: Metabase) não consegue localizá-lo.
+
+O Metabase permite que o usuário selecione a cada quanto tempo ele quer que o painel seja atualizado (refresh na base).
+
+Papermill: biblioteca para orquestração de notebooks. Cria uma cópia do notebook, permite definir hora e data para rodar novamente o notebook e permite passar os parâmetros do modelo pelo terminal.
+
+Comando para criar um arquivo .sh no terminal do PowerShell: New-Item example.sh -ItemType File
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Deploy na Cloud AWS
+
+Configuração do PostgreSQL no Linux:
+- Instalar o PostgreSQL: sudo apt install postgresql.
+- Modificar o arquivo postgresql.conf, trocando a linha listen_addresses = 'localhost' para '*' e DESCOMENTANDO-A.
+- Modificar o arquivo pg_hba.conf, adicionando a linha ao final do código: host all all 0.0.0.0/0 md5.
+- Reiniciar o Postgres via comando: sudo /etc/init.d/postgresql restart ou systemctl restart postgresql.
+- Senha configurada para o user postgres: Ds-Insiders-1604.
+
+1. Criação do Banco de Dados Postgres usando o RDS:
+- Criar um grupo de segurança na AWS (Security Group) selecionando como regra de entrada apenas o 'Meu IP'.
+- Checando o IP: https://checkip.amazonaws.com/
+- Senha do banco de dados RDS da AWS: Rz80vE0cEwaolrv0pwNq
+- Nome do usuário principal: postgres
+- Nome do database: postgres
+- Nome da instância do banco de dados: db-insiders-14
+
+2. Criação do Bucket no S3:
+- Usado para armazenar os dados.
+- Apenas dar um nome, não precisa mudar nenhuma outra configuração.
+- Nome do bucket: bucket-cds-insiders-1504-blocked
+
+3. Conexão do Notebook do PC com os dados do S3.
+- Ir no canto direito superior da tela (onde tem o ícone do meu perfil), clicando em 'credenciais de segurança'.
+- No menu das credenciais de segurança, criar uma nova chave de acesso e copiar o código secreto (só aparece na hora da criação).
+- Criar um arquivo '.aws' na pasta raíz e criar os arquivos 'credentials' e 'config'.
+
+4. Criação de uma instância (servidor) no EC2:
+- Precisa deixar a instância ativada para conectar ao banco de dados.
+- Ao criar a instância é criado um novo par de chaves: chave-insiders-bhmr.
+- Armazenar a chave privada em um local seguro no computador. Precisa dela mais tarde para conectar à instância.
+- Regras com origem 0.0.0.0/0 permitem que todos os endereços IP acessem sua instância.
+- Recomendamos configurar regras de grupo de segurança para permitir o acesso apenas de endereços IP conhecidos.
+- Conexão com chave SSH não necessita login e senha para conectar ao GitHub/AWS.
+- Localização da chave ao criar a instância no EC2: ~/.ssh/authorized_keys (movida para a pasta do projeto).
+
+Funcionamento da chave .ssh ou .pem (para autenticação EC2):
+1. Chave RSA: existe uma chave privada, a qual fica no repositório online, e uma chave pública, a qual fica no computador do usuário.
+2. A chave pública é comparada com a privada para realizar a conexão sem senha (não HTTPS).
+
+5. Conexão do Metabase ao Banco de Dados:
+- Verifica se o computador possui o java instalado pelo menos na versão 8 através do comando java -version.
+- Faz o download do metabase, cria um novo repositório e passa o arquivo baixado para lá.
+- Entra no repositório criado pelo terminal e roda o código: java -jar metabase.jar
+- Abre uma nova aba no navegador e cola o endereço: http://localhost:3000
+- Vai nas configurações do Metabase, depois vai em Administrador, depois em Banco de Dados e Adicionar um Banco de Dados.
+- Insere as configurações do banco de dados criado no RDS.
+
+
+
+
