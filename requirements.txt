@@ -1,0 +1,13 @@
+boto3
+matplotlib
+numpy
+openpyxl==3.0.10
+pandas==1.5.3
+plotly
+psycopg2
+s3fs
+scikit-learn
+scipy==1.9.3
+seaborn
+SQLAlchemy
+umap-learn
