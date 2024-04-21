@@ -1,0 +1,4 @@
+*.pem
+*.sqlite
+resumo_clusterizacao.txt
+*.pkl
