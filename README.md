@@ -41,19 +41,7 @@ O projeto será executado com auxílio da AWS Cloud. Todos os dados necessários
 Figura 1 - Arquitetura do Projeto
 ![alt text](<arquitetura_projeto.png>)
 
-## 4. Descrição dos Dados
-
-Dados de entrada:
-- InvoiceNo: id da transação;
-- StockCode: código do item;
-- Description: descrição do item;
-- Quantity: quantidade do item por transação;
-- InvoiceDate: data da transação;
-- UnitPrice: preço unitário do item;
-- CustomerID: id do cliente;
-- Country: país do cliente.
-
-## 5. Resultados de Negócio
+## 4. Resultados de Negócio
 
 Respondendo às perguntas de negócio:
 
