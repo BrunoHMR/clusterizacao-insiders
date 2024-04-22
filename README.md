@@ -36,8 +36,9 @@ Uma determinada empresa comercializa produtos de segunda linha de diversas marca
 
 ## 3. Arquitetura do Projeto
 
-O projeto será executado com auxílio da AWS Cloud. Todos os dados necessários para o desenvolvimento do projeto, tais como planilhas, csvs, features e modelos serão alocados no serviço da armazenamento de baixo custo da AWS, o S3. Estes dados serão lidos por um notebook python executado no computador local. Os resultados, ou seja, a tabela com os clientes finais, suas características e seus respectivos clusters, serão alocados em um Banco de Dados PostgreSQL, criado utilizando o serviço RDS da AWS, para que possam ser feitas rápidas análises posteriores dos clusters em SQL ou utilizando alguma ferramenta de DataViz. A arquitetura do projeto pode ser vista na Figura abaixo:
+O projeto será executado com auxílio da AWS Cloud. Todos os dados necessários para o desenvolvimento do projeto, tais como planilhas, csvs, features e modelos serão alocados no serviço da armazenamento de baixo custo da AWS, o S3. Estes dados serão lidos por um notebook python executado no computador local. O notebook será executado automaticamente utilizando a biblioteca Papermill, do Python, em conjunto com o agendador de tarefas do Linux, o Crontab. Os resultados, ou seja, a tabela com os clientes finais, suas características e seus respectivos clusters, serão alocados em um Banco de Dados PostgreSQL, criado utilizando o serviço RDS da AWS, para que possam ser feitas rápidas análises posteriores dos clusters em SQL ou utilizando alguma ferramenta de DataViz. A arquitetura do projeto pode ser vista na Figura 1 abaixo:
 
+Figura 1 - Arquitetura do Projeto
 ![alt text](<arquitetura_projeto.png>)
 
 ## 4. Descrição dos Dados
