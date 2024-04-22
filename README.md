@@ -38,7 +38,7 @@ Uma determinada empresa comercializa produtos de segunda linha de diversas marca
 
 O projeto será executado com auxílio da AWS Cloud. Todos os dados necessários para o desenvolvimento do projeto, tais como planilhas, csvs, features e modelos serão alocados no serviço da armazenamento de baixo custo da AWS, o S3. Estes dados serão lidos por um notebook python executado no computador local. Os resultados, ou seja, a tabela com os clientes finais, suas características e seus respectivos clusters, serão alocados em um Banco de Dados PostgreSQL, criado utilizando o serviço RDS da AWS, para que possam ser feitas rápidas análises posteriores dos clusters em SQL ou utilizando alguma ferramenta de DataViz. A arquitetura do projeto pode ser vista na Figura abaixo:
 
-![alt text](<Sem título-2024-04-22-0124.png>)
+![alt text](<arquitetura_projeto.png>)
 
 ## 4. Descrição dos Dados
 
